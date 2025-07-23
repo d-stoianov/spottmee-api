@@ -1,17 +1,20 @@
-import { Controller, Get, Post } from '@nestjs/common'
+import { Controller, Delete, Get, UseGuards } from '@nestjs/common'
 import { UserService } from './user.service'
+import { AuthContext } from 'src/auth/auth-context.decorator'
+import { AuthContextType, AuthGuard } from 'src/auth/auth.guard'
 
-@Controller('users')
+@UseGuards(AuthGuard)
+@Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
-    @Post()
-    async create() {
-        return this.userService.createUser('dima@gmail.com', '123')
+    @Get()
+    getUser(@AuthContext() authContext: AuthContextType) {
+        return authContext.user
     }
 
-    @Get()
-    async findAll() {
-        return this.userService.getUsers()
+    @Delete()
+    deleteUser(@AuthContext() authContext: AuthContextType) {
+        return this.userService.deleteUser(authContext.user.id)
     }
 }
