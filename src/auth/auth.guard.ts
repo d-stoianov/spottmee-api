@@ -7,7 +7,7 @@ import {
 import { User } from '@prisma/client'
 import { DecodedIdToken } from 'firebase-admin/auth'
 import { FirebaseService } from 'src/firebase/firebase.service'
-import { UserService } from 'src/user/user.service'
+import { PrismaService } from 'src/prisma/prisma.service'
 
 export interface AuthContextType {
     user: User
@@ -17,8 +17,8 @@ export interface AuthContextType {
 @Injectable()
 export class AuthGuard implements CanActivate {
     constructor(
-        private readonly firebaseService: FirebaseService,
-        private readonly userService: UserService,
+        private readonly firebase: FirebaseService,
+        private readonly prisma: PrismaService,
     ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,10 +31,12 @@ export class AuthGuard implements CanActivate {
 
         const token = authHeader.split(' ')[1]
 
-        const decodedIdToken = await this.firebaseService
+        const decodedIdToken = await this.firebase
             .getAuth()
             .verifyIdToken(token)
-        const user = await this.userService.getUserByUID(decodedIdToken.uid)
+        const user = await this.prisma.user.findUnique({
+            where: { uid: decodedIdToken.uid },
+        })
 
         if (!user) {
             throw new UnauthorizedException('Cannot find user by firebase UID')
