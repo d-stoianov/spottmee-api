@@ -31,22 +31,37 @@ export class AuthGuard implements CanActivate {
 
         const token = authHeader.split(' ')[1]
 
-        const decodedIdToken = await this.firebase
-            .getAuth()
-            .verifyIdToken(token)
-        const user = await this.prisma.user.findUnique({
-            where: { uid: decodedIdToken.uid },
-        })
+        try {
+            const decodedIdToken = await this.firebase
+                .getAuth()
+                .verifyIdToken(token)
+            const user = await this.prisma.user.findUnique({
+                where: { uid: decodedIdToken.uid },
+            })
 
-        if (!user) {
-            throw new UnauthorizedException('Cannot find user by firebase UID')
+            if (!user) {
+                throw new UnauthorizedException(
+                    'Cannot find user by firebase UID',
+                )
+            }
+
+            request.authContext = {
+                user,
+                decodedIdToken,
+            } as AuthContextType
+
+            return true
+        } catch (error: any) {
+            // firebase errors
+            if (error?.code === 'auth/id-token-expired') {
+                throw new UnauthorizedException('Token expired')
+            }
+
+            if (error?.code === 'auth/argument-error') {
+                throw new UnauthorizedException('Invalid token')
+            }
+
+            throw new UnauthorizedException('Not authorized')
         }
-
-        request.authContext = {
-            user,
-            decodedIdToken,
-        } as AuthContextType
-
-        return true
     }
 }

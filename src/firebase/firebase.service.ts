@@ -11,6 +11,8 @@ const FIREBASE_SERVICE_ACCOUNT: admin.ServiceAccount = JSON.parse(
     ),
 )
 
+const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET ?? ''
+
 @Injectable()
 export class FirebaseService {
     private app: admin.app.App
@@ -18,6 +20,7 @@ export class FirebaseService {
     onModuleInit() {
         this.app = admin.initializeApp({
             credential: admin.credential.cert(FIREBASE_SERVICE_ACCOUNT),
+            storageBucket: FIREBASE_STORAGE_BUCKET,
         })
 
         console.log('Firebase initialized: ', this.app.options)
@@ -25,5 +28,9 @@ export class FirebaseService {
 
     getAuth() {
         return admin.auth()
+    }
+
+    getStorage() {
+        return admin.storage()
     }
 }

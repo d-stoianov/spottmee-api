@@ -6,4 +6,27 @@ model Album {
     name        String
     description String?
     createdAt   DateTime @default(now())
+
+    photos Photo[]
+}
+
+model Photo {
+    id      String @id @default(cuid())
+    albumId String
+    album   Album  @relation(fields: [albumId], references: [id])
+
+    name       String // original file name
+    url        String // hosted url in the bucket
+    size       Int // in bytes
+    type       String // image/jpeg, image/png
+    uploadedAt DateTime @default(now())
+
+    status PhotoStatus @default(UPLOADED)
+}
+
+enum PhotoStatus {
+    UPLOADED // successfully uploaded to the storage
+    PROCESSING // being processed
+    READY // fully processed (e.g embeddings were created)
+    FAILED // processing failed
 }
