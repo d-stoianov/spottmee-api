@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
-import { FirebaseService } from 'src/firebase/firebase.service'
-import { PrismaService } from 'src/prisma/prisma.service'
-import { CreateUserDto } from './dto/create-user.dto'
+
+import { FirebaseService } from '@/firebase/firebase.service'
+import { PrismaService } from '@/prisma/prisma.service'
+import { CreateUserDto } from '@/auth/dto/create-user.dto'
 
 @Injectable()
 export class AuthService {

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { Photo } from '@prisma/client'
-import { FirebaseService } from 'src/firebase/firebase.service'
-import { PrismaService } from 'src/prisma/prisma.service'
+
+import { FirebaseService } from '@/firebase/firebase.service'
+import { PrismaService } from '@/prisma/prisma.service'
 
 @Injectable()
 export class PhotoService {

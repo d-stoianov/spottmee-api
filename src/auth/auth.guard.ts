@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common'
 import { User } from '@prisma/client'
 import { DecodedIdToken } from 'firebase-admin/auth'
-import { FirebaseService } from 'src/firebase/firebase.service'
-import { PrismaService } from 'src/prisma/prisma.service'
+
+import { FirebaseService } from '@/firebase/firebase.service'
+import { PrismaService } from '@/prisma/prisma.service'
 
 export interface AuthContextType {
     user: User

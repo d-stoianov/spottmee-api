@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
-import { AlbumService } from './album.service'
-import { AlbumController } from './album.controller'
+
+import { AlbumService } from '@/album/album.service'
+import { AlbumController } from '@/album/album.controller'
 
 @Module({
     providers: [AlbumService],

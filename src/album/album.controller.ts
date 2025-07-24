@@ -8,9 +8,10 @@ import {
     Body,
     UseGuards,
 } from '@nestjs/common'
-import { AlbumService } from './album.service'
-import { AuthContext } from 'src/auth/auth-context.decorator'
-import { AuthGuard, AuthContextType } from 'src/auth/auth.guard'
+
+import { AlbumService } from '@/album/album.service'
+import { AuthContext } from '@/auth/auth-context.decorator'
+import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
 
 @UseGuards(AuthGuard)
 @Controller('albums')

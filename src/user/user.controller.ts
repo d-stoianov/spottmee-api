@@ -1,7 +1,8 @@
 import { Controller, Delete, Get, UseGuards } from '@nestjs/common'
-import { UserService } from './user.service'
-import { AuthContext } from 'src/auth/auth-context.decorator'
-import { AuthContextType, AuthGuard } from 'src/auth/auth.guard'
+
+import { UserService } from '@/user/user.service'
+import { AuthContext } from '@/auth/auth-context.decorator'
+import { AuthContextType, AuthGuard } from '@/auth/auth.guard'
 
 @UseGuards(AuthGuard)
 @Controller('user')

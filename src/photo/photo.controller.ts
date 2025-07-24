@@ -7,10 +7,11 @@ import {
     UploadedFiles,
     UseInterceptors,
 } from '@nestjs/common'
-import { AuthContext } from 'src/auth/auth-context.decorator'
-import { AuthContextType } from 'src/auth/auth.guard'
-import { PhotoService } from './photo.service'
 import { FilesInterceptor } from '@nestjs/platform-express'
+
+import { AuthContext } from '@/auth/auth-context.decorator'
+import { AuthContextType } from '@/auth/auth.guard'
+import { PhotoService } from '@/photo/photo.service'
 
 @Controller('albums/:id/photos')
 export class PhotoController {
