@@ -12,6 +12,8 @@ import {
 import { AlbumService } from '@/album/album.service'
 import { AuthContext } from '@/auth/auth-context.decorator'
 import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
+import { CreateAlbumDto } from '@/album/dto/create-album.dto'
+import { UpdateAlbumDto } from '@/album/dto/update-album.dto'
 
 @UseGuards(AuthGuard)
 @Controller('albums')
@@ -21,7 +23,7 @@ export class AlbumController {
     @Post()
     async createAlbum(
         @AuthContext() authContext: AuthContextType,
-        @Body() body: any,
+        @Body() body: CreateAlbumDto,
     ) {
         const { name, description } = body
         return this.albumService.createAlbum(authContext.user.id, {
@@ -40,15 +42,23 @@ export class AlbumController {
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
     ) {
-        return this.albumService.getAlbumById(authContext.user.id, albumId)
+        return this.albumService.assertUserHasAccess(
+            authContext.user.id,
+            albumId,
+        )
     }
 
     @Put(':id')
     async updateAlbumById(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
-        @Body() body: any,
+        @Body() body: UpdateAlbumDto,
     ) {
+        await this.albumService.assertUserHasAccess(
+            authContext.user.id,
+            albumId,
+        )
+
         const { name, description } = body
         return this.albumService.updateAlbumById(authContext.user.id, albumId, {
             name,
@@ -61,6 +71,11 @@ export class AlbumController {
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
     ) {
+        await this.albumService.assertUserHasAccess(
+            authContext.user.id,
+            albumId,
+        )
+
         return this.albumService.deleteAlbumById(authContext.user.id, albumId)
     }
 }

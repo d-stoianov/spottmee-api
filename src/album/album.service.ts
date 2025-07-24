@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common'
+import {
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common'
 import { Album } from '@prisma/client'
-import { PrismaService } from '@/prisma/prisma.service'
 
+import { PrismaService } from '@/prisma/prisma.service'
 import { CreateAlbumDto } from '@/album/dto/create-album.dto'
+import { UpdateAlbumDto } from './dto/update-album.dto'
 
 @Injectable()
 export class AlbumService {
@@ -23,22 +28,32 @@ export class AlbumService {
         })
     }
 
+    async assertUserHasAccess(userId: string, albumId: string): Promise<Album> {
+        const album = await this.prisma.album.findFirst({
+            where: { id: albumId },
+        })
+
+        if (!album) {
+            throw new NotFoundException('Album not found')
+        }
+
+        if (album.creatorId !== userId) {
+            throw new ForbiddenException('You do not have access to this album')
+        }
+
+        return album
+    }
+
     async getAlbumsByUserId(userId: string): Promise<Album[]> {
         return this.prisma.album.findMany({
             where: { creatorId: userId },
         })
     }
 
-    async getAlbumById(userId: string, id: string): Promise<Album | null> {
-        return this.prisma.album.findUnique({
-            where: { creatorId: userId, id },
-        })
-    }
-
     async updateAlbumById(
         userId: string,
         id: string,
-        albumDto: Partial<CreateAlbumDto>,
+        albumDto: UpdateAlbumDto,
     ): Promise<Album | null> {
         const { name, description } = albumDto
         return this.prisma.album.update({
