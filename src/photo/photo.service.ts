@@ -26,7 +26,7 @@ export class PhotoService {
                     data: {
                         id,
                         albumId,
-                        name: photo.originalname,
+                        originalName: photo.originalname,
                         url,
                         size: photo.size,
                         type: photo.mimetype,

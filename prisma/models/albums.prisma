@@ -15,11 +15,11 @@ model Photo {
     albumId String
     album   Album  @relation(fields: [albumId], references: [id])
 
-    name       String // original file name
-    url        String // hosted url in the bucket
-    size       Int // in bytes
-    type       String // image/jpeg, image/png
-    uploadedAt DateTime @default(now())
+    originalName String // original file name
+    url          String // hosted url in the bucket
+    size         Int // in bytes
+    type         String // image/jpeg, image/png
+    createdAt    DateTime @default(now())
 
     status PhotoStatus @default(UPLOADED)
 }
