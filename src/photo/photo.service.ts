@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { Photo } from '@prisma/client'
+import { v4 as uuidv4 } from 'uuid'
 
 import { FirebaseService } from '@/firebase/firebase.service'
 import { PrismaService } from '@/prisma/prisma.service'
@@ -17,10 +18,13 @@ export class PhotoService {
     ): Promise<Photo[]> {
         const uploadedPhotos = await Promise.all(
             photos.map(async (photo) => {
-                const url = await this.uploadPhotoToFirebase(albumId, photo)
+                const id = uuidv4()
+
+                const url = await this.uploadPhotoToFirebase(albumId, photo, id)
 
                 return this.prisma.photo.create({
                     data: {
+                        id,
                         albumId,
                         name: photo.originalname,
                         url,
@@ -42,12 +46,13 @@ export class PhotoService {
     private async uploadPhotoToFirebase(
         albumId: string,
         file: Express.Multer.File,
+        fileId: string,
     ): Promise<string> {
         const bucket = this.firebase.getStorage().bucket()
 
-        const sanitizedName = file.originalname.replace(/\s+/g, '-')
+        const fileExtension = file.originalname.split('.').pop()
 
-        const blob = bucket.file(`albums/${albumId}/${sanitizedName}`)
+        const blob = bucket.file(`albums/${albumId}/${fileId}.${fileExtension}`)
         const blobStream = blob.createWriteStream({
             metadata: {
                 contentType: file.mimetype,

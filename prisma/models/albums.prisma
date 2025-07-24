@@ -11,7 +11,7 @@ model Album {
 }
 
 model Photo {
-    id      String @id @default(cuid())
+    id      String @id @default(uuid())
     albumId String
     album   Album  @relation(fields: [albumId], references: [id])
 
