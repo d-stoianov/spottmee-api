@@ -26,12 +26,6 @@ importers:
       '@prisma/client':
         specifier: 6.12.0
         version: 6.12.0(prisma@6.12.0(typescript@5.8.3))(typescript@5.8.3)
-      class-transformer:
-        specifier: ^0.5.1
-        version: 0.5.1
-      class-validator:
-        specifier: ^0.14.2
-        version: 0.14.2
       firebase-admin:
         specifier: ^13.4.0
         version: 13.4.0
@@ -44,6 +38,9 @@ importers:
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
+      zod:
+        specifier: ^4.0.17
+        version: 4.0.17
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.2.0
@@ -3927,6 +3924,9 @@ packages:
     resolution: {integrity: sha512-cYVsTjKl8b+FrnidjibDWskAv7UKOfcwaVZdp/it9n1s9fU3IkgDbhdIRKCW4JDsAlECJY0ytoVPT3sK6kideA==}
     engines: {node: '>=18'}
 
+  zod@4.0.17:
+    resolution: {integrity: sha512-1PHjlYRevNxxdy2JZ8JcNAw7rX8V9P1AKkP+x/xZfxB0K5FYfuV+Ug6P/6NVSR2jHQ+FzDDoDHS04nYUsOIyLQ==}
+
 snapshots:
 
   '@ampproject/remapping@2.3.0':
@@ -5243,7 +5243,8 @@ snapshots:
   '@types/tough-cookie@4.0.5':
     optional: true
 
-  '@types/validator@13.15.2': {}
+  '@types/validator@13.15.2':
+    optional: true
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -5796,13 +5797,15 @@ snapshots:
 
   cjs-module-lexer@1.4.3: {}
 
-  class-transformer@0.5.1: {}
+  class-transformer@0.5.1:
+    optional: true
 
   class-validator@0.14.2:
     dependencies:
       '@types/validator': 13.15.2
       libphonenumber-js: 1.12.10
       validator: 13.15.15
+    optional: true
 
   cli-cursor@3.1.0:
     dependencies:
@@ -7183,7 +7186,8 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libphonenumber-js@1.12.10: {}
+  libphonenumber-js@1.12.10:
+    optional: true
 
   limiter@1.1.5: {}
 
@@ -8148,7 +8152,8 @@ snapshots:
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
 
-  validator@13.15.15: {}
+  validator@13.15.15:
+    optional: true
 
   vary@1.1.2: {}
 
@@ -8275,3 +8280,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   yoctocolors-cjs@2.1.2: {}
+
+  zod@4.0.17: {}
