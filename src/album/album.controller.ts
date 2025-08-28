@@ -7,6 +7,8 @@ import {
     Param,
     Body,
     UseGuards,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common'
 
 import { AlbumService } from '@/album/album.service'
@@ -15,6 +17,7 @@ import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
 
 import { createAlbumSchema } from '@/album/schemas/create-album.schema'
 import { updateAlbumSchema } from '@/album/schemas/update-album.schema'
+import { AlbumDto, albumSchema } from '@/album/schemas/album.schema'
 
 @UseGuards(AuthGuard)
 @Controller('albums')
@@ -25,29 +28,41 @@ export class AlbumController {
     async createAlbum(
         @AuthContext() authContext: AuthContextType,
         @Body() body: any,
-    ) {
+    ): Promise<AlbumDto> {
         const { name, description } = createAlbumSchema.parse(body)
 
-        return this.albumService.createAlbum(authContext.user.id, {
+        const album = await this.albumService.createAlbum(authContext.user.id, {
             name,
             description,
         })
+
+        console.log(album)
+
+        return albumSchema.parse(album)
     }
 
     @Get()
-    async getAlbums(@AuthContext() authContext: AuthContextType) {
-        return this.albumService.getAlbumsByUserId(authContext.user.id)
+    async getAlbums(
+        @AuthContext() authContext: AuthContextType,
+    ): Promise<AlbumDto[]> {
+        const albums = await this.albumService.getAlbumsByUserId(
+            authContext.user.id,
+        )
+
+        return albums.map((al) => albumSchema.parse(al))
     }
 
     @Get(':id')
     async getAlbumById(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
-    ) {
-        return this.albumService.assertUserHasAccess(
+    ): Promise<AlbumDto> {
+        const album = await this.albumService.assertUserHasAccess(
             authContext.user.id,
             albumId,
         )
+
+        return albumSchema.parse(album)
     }
 
     @Put(':id')
@@ -55,7 +70,7 @@ export class AlbumController {
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @Body() body: any,
-    ) {
+    ): Promise<AlbumDto> {
         await this.albumService.assertUserHasAccess(
             authContext.user.id,
             albumId,
@@ -63,13 +78,20 @@ export class AlbumController {
 
         const { name, description } = updateAlbumSchema.parse(body)
 
-        return this.albumService.updateAlbumById(authContext.user.id, albumId, {
-            name,
-            description,
-        })
+        const album = await this.albumService.updateAlbumById(
+            authContext.user.id,
+            albumId,
+            {
+                name,
+                description,
+            },
+        )
+
+        return albumSchema.parse(album)
     }
 
     @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
     async deleteAlbumById(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
@@ -79,6 +101,6 @@ export class AlbumController {
             albumId,
         )
 
-        return this.albumService.deleteAlbumById(authContext.user.id, albumId)
+        this.albumService.deleteAlbumById(authContext.user.id, albumId)
     }
 }
