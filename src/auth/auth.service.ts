@@ -36,4 +36,29 @@ export class AuthService {
 
         return { user, customToken }
     }
+
+    async createUserWithProvider(idToken: string) {
+        // verify firebase token
+        const decoded = await this.firebaseService
+            .getAuth()
+            .verifyIdToken(idToken)
+
+        const { uid, email, name } = decoded
+
+        if (!email) throw new BadRequestException('No email provided')
+
+        let user = await this.prisma.user.findUnique({ where: { uid } })
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: { uid, email, name },
+            })
+        }
+
+        // optional: issue a custom token if you want client to re-auth
+        const customToken = await this.firebaseService
+            .getAuth()
+            .createCustomToken(uid)
+
+        return { user, customToken }
+    }
 }
