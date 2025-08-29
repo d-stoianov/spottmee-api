@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common'
+import { v4 as uuidv4 } from 'uuid'
+
 import * as admin from 'firebase-admin'
 
 console.log(
@@ -32,5 +34,23 @@ export class FirebaseService {
 
     getStorage() {
         return admin.storage()
+    }
+
+    async uploadFile(path: string, file: Express.Multer.File): Promise<string> {
+        const bucket = this.getStorage().bucket()
+        const fileExtension = file.originalname.split('.').pop()
+        const fileId = uuidv4()
+        const fileName = `${path}/${fileId}.${fileExtension}`
+
+        const blob = bucket.file(fileName)
+
+        await blob.save(file.buffer, {
+            contentType: file.mimetype,
+        })
+
+        await blob.makePublic()
+        const url = `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+
+        return url
     }
 }

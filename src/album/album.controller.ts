@@ -9,6 +9,8 @@ import {
     UseGuards,
     HttpCode,
     HttpStatus,
+    UseInterceptors,
+    UploadedFiles,
 } from '@nestjs/common'
 
 import { AlbumService } from '@/album/album.service'
@@ -18,6 +20,8 @@ import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
 import { createAlbumSchema } from '@/album/schemas/create-album.schema'
 import { updateAlbumSchema } from '@/album/schemas/update-album.schema'
 import { AlbumDto, albumSchema } from '@/album/schemas/album.schema'
+import { FilesInterceptor } from '@nestjs/platform-express'
+import { ApiNoContentResponse } from '@nestjs/swagger'
 
 @UseGuards(AuthGuard)
 @Controller('albums')
@@ -25,18 +29,23 @@ export class AlbumController {
     constructor(private readonly albumService: AlbumService) {}
 
     @Post()
+    @UseInterceptors(FilesInterceptor('coverImage', 1))
     async createAlbum(
         @AuthContext() authContext: AuthContextType,
         @Body() body: any,
+        @UploadedFiles() files: Express.Multer.File[],
     ): Promise<AlbumDto> {
-        const { name, description } = createAlbumSchema.parse(body)
+        const coverImage = files?.[0]
 
-        const album = await this.albumService.createAlbum(authContext.user.id, {
-            name,
-            description,
+        const dto = createAlbumSchema.parse({
+            ...body,
+            coverImage,
         })
 
-        console.log(album)
+        const album = await this.albumService.createAlbum(
+            authContext.user.id,
+            dto,
+        )
 
         return albumSchema.parse(album)
     }
@@ -66,25 +75,29 @@ export class AlbumController {
     }
 
     @Put(':id')
+    @UseInterceptors(FilesInterceptor('coverImage', 1))
     async updateAlbumById(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @Body() body: any,
+        @UploadedFiles() files: Express.Multer.File[],
     ): Promise<AlbumDto> {
+        const coverImage = files?.[0]
+
+        const dto = updateAlbumSchema.parse({
+            ...body,
+            coverImage,
+        })
+
         await this.albumService.assertUserHasAccess(
             authContext.user.id,
             albumId,
         )
 
-        const { name, description } = updateAlbumSchema.parse(body)
-
         const album = await this.albumService.updateAlbumById(
             authContext.user.id,
             albumId,
-            {
-                name,
-                description,
-            },
+            dto,
         )
 
         return albumSchema.parse(album)
@@ -100,7 +113,10 @@ export class AlbumController {
             authContext.user.id,
             albumId,
         )
+        // TODO: cascade delete photos table
 
-        this.albumService.deleteAlbumById(authContext.user.id, albumId)
+        await this.albumService.deleteAlbumById(authContext.user.id, albumId)
+
+        return ApiNoContentResponse
     }
 }

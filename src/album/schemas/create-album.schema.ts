@@ -1,3 +1,4 @@
+import { fileImageSchema } from '@/schemas/file.schema'
 import { z } from 'zod'
 
 export const createAlbumSchema = z.object({
@@ -7,7 +8,11 @@ export const createAlbumSchema = z.object({
         .max(32, { error: 'Name is too long' }),
     description: z
         .string({ error: 'Description should be a string type' })
-        .optional(),
+        .min(2, { error: 'Description is too short' })
+        .max(256, { error: 'Description is too long' })
+        .nullable()
+        .default(''),
+    coverImage: fileImageSchema.optional(),
 })
 
 export type CreateAlbumDto = z.infer<typeof createAlbumSchema>
