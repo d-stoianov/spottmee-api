@@ -25,7 +25,7 @@ export class AlbumService {
 
         const album = await this.prisma.album.create({
             data: {
-                creatorId: userId,
+                creator_id: userId,
                 name,
                 description,
             },
@@ -43,7 +43,7 @@ export class AlbumService {
         return this.prisma.album.update({
             where: { id: album.id },
             data: {
-                coverImageUrl,
+                cover_image_url: coverImageUrl,
             },
         })
     }
@@ -57,7 +57,7 @@ export class AlbumService {
             throw new NotFoundException('Album not found')
         }
 
-        if (album.creatorId !== userId) {
+        if (album.creator_id !== userId) {
             throw new ForbiddenException('You do not have access to this album')
         }
 
@@ -66,7 +66,7 @@ export class AlbumService {
 
     async getAlbumsByUserId(userId: string): Promise<Album[]> {
         return this.prisma.album.findMany({
-            where: { creatorId: userId },
+            where: { creator_id: userId },
         })
     }
 
@@ -74,7 +74,7 @@ export class AlbumService {
         userId: string,
         id: string,
         albumDto: UpdateAlbumDto,
-    ): Promise<Album | null> {
+    ): Promise<Album> {
         const { name, description, coverImage } = albumDto
 
         let coverImageUrl: string | null = null
@@ -90,8 +90,8 @@ export class AlbumService {
         }
 
         return this.prisma.album.update({
-            where: { creatorId: userId, id },
-            data: { name, description, coverImageUrl },
+            where: { creator_id: userId, id },
+            data: { name, description, cover_image_url: coverImageUrl },
         })
     }
 
@@ -99,7 +99,7 @@ export class AlbumService {
         // initiate a job to delete album cover, album photo from the bucket
 
         return this.prisma.album.delete({
-            where: { creatorId: userId, id },
+            where: { creator_id: userId, id },
         })
     }
 }

@@ -4,14 +4,14 @@ import {
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common'
-import { User } from '@prisma/client'
 import { DecodedIdToken } from 'firebase-admin/auth'
 
 import { FirebaseService } from '@/firebase/firebase.service'
 import { PrismaService } from '@/prisma/prisma.service'
+import { serializeUser, UserDto } from '@/user/schemas/user.schema'
 
 export interface AuthContextType {
-    user: User
+    user: UserDto
     decodedIdToken: DecodedIdToken
 }
 
@@ -47,7 +47,7 @@ export class AuthGuard implements CanActivate {
             }
 
             request.authContext = {
-                user,
+                user: serializeUser(user),
                 decodedIdToken,
             } as AuthContextType
 

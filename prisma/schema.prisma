@@ -1,8 +1,47 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  uid        String   @unique
+  email      String   @unique
+  name       String?
+  created_at DateTime @default(now())
+  albums     Album[]
+}
+
+model Album {
+  id              String   @id @default(cuid())
+  creator_id      String
+  name            String
+  description     String?
+  cover_image_url String?
+  createdAt       DateTime @default(now())
+  creator         User     @relation(fields: [creator_id], references: [id])
+  photos          Photo[]
+}
+
+model Photo {
+  id            String      @id @default(uuid())
+  album_id      String
+  original_name String
+  url           String
+  size          Int
+  type          String
+  created_at    DateTime    @default(now())
+  status        PhotoStatus @default(UPLOADED)
+  album         Album       @relation(fields: [album_id], references: [id])
+}
+
+enum PhotoStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
 }

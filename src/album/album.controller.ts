@@ -19,7 +19,7 @@ import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
 
 import { createAlbumSchema } from '@/album/schemas/create-album.schema'
 import { updateAlbumSchema } from '@/album/schemas/update-album.schema'
-import { AlbumDto, albumSchema } from '@/album/schemas/album.schema'
+import { AlbumDto, albumSchema, serializeAlbum } from '@/album/schemas/album.schema'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { ApiNoContentResponse } from '@nestjs/swagger'
 
@@ -47,7 +47,7 @@ export class AlbumController {
             dto,
         )
 
-        return albumSchema.parse(album)
+        return serializeAlbum(album)
     }
 
     @Get()
@@ -58,7 +58,7 @@ export class AlbumController {
             authContext.user.id,
         )
 
-        return albums.map((al) => albumSchema.parse(al))
+        return albums.map((al) => serializeAlbum(al))
     }
 
     @Get(':id')
@@ -71,7 +71,7 @@ export class AlbumController {
             albumId,
         )
 
-        return albumSchema.parse(album)
+        return serializeAlbum(album)
     }
 
     @Put(':id')
@@ -100,7 +100,7 @@ export class AlbumController {
             dto,
         )
 
-        return albumSchema.parse(album)
+        return serializeAlbum(album)
     }
 
     @Delete(':id')

@@ -1,3 +1,4 @@
+import { Album } from '@prisma/client'
 import z from 'zod'
 
 export const albumSchema = z.object({
@@ -15,5 +16,15 @@ export const albumSchema = z.object({
         .nullable()
         .default(null),
 })
+
+export const serializeAlbum = (album: Album): AlbumDto => {
+    return albumSchema.parse({
+        id: album.id,
+        name: album.name,
+        createdAt: album.createdAt,
+        description: album.description ?? null,
+        coverImageUrl: album.cover_image_url ?? null,
+    })
+}
 
 export type AlbumDto = z.infer<typeof albumSchema>

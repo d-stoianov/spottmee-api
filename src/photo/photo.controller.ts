@@ -15,6 +15,7 @@ import { AuthContext } from '@/auth/auth-context.decorator'
 import { AuthContextType, AuthGuard } from '@/auth/auth.guard'
 import { PhotoService } from '@/photo/photo.service'
 import { AlbumService } from '@/album/album.service'
+import { PhotoDto, serializePhoto } from '@/photo/schemas/photo.schema'
 
 @UseGuards(AuthGuard)
 @Controller('albums/:id/photos')
@@ -29,9 +30,9 @@ export class PhotoController {
     async uploadPhotos(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
-        @UploadedFiles() photos: Express.Multer.File[],
-    ) {
-        if (!photos || photos.length === 0) {
+        @UploadedFiles() files: Express.Multer.File[],
+    ): Promise<PhotoDto[]> {
+        if (!files || files.length === 0) {
             throw new BadRequestException('No photos were uploaded')
         }
 
@@ -40,19 +41,23 @@ export class PhotoController {
             albumId,
         )
 
-        return this.photoService.uploadPhotos(albumId, photos)
+        const photos = await this.photoService.uploadPhotos(albumId, files)
+
+        return photos.map((p) => serializePhoto(p))
     }
 
     @Get()
     async getPhotosFromAlbum(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
-    ) {
+    ): Promise<PhotoDto[]> {
         await this.albumService.assertUserHasAccess(
             authContext.user.id,
             albumId,
         )
 
-        return this.photoService.getPhotos(albumId)
+        const photos = await this.photoService.getPhotos(albumId)
+
+        return photos.map((p) => serializePhoto(p))
     }
 }

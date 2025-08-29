@@ -3,6 +3,9 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { FirebaseService } from '@/firebase/firebase.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { CreateUserDto } from './schemas/create-user.schema'
+import { serializeUser, UserDto } from '@/user/schemas/user.schema'
+
+type UserWithToken = { user: UserDto; customToken: string }
 
 @Injectable()
 export class AuthService {
@@ -11,7 +14,7 @@ export class AuthService {
         private readonly firebaseService: FirebaseService,
     ) {}
 
-    async createUser(dto: CreateUserDto) {
+    async createUser(dto: CreateUserDto): Promise<UserWithToken> {
         const { email, password, name } = dto
 
         const existing = await this.prisma.user.findFirst({
@@ -34,10 +37,10 @@ export class AuthService {
             .getAuth()
             .createCustomToken(firebaseUser.uid)
 
-        return { user, customToken }
+        return { user: serializeUser(user), customToken }
     }
 
-    async createUserWithProvider(idToken: string) {
+    async createUserWithProvider(idToken: string): Promise<UserWithToken> {
         // verify firebase token
         const decoded = await this.firebaseService
             .getAuth()
@@ -59,6 +62,6 @@ export class AuthService {
             .getAuth()
             .createCustomToken(uid)
 
-        return { user, customToken }
+        return { user: serializeUser(user), customToken }
     }
 }

@@ -22,11 +22,11 @@ export class PhotoService {
 
                 const url = await this.uploadPhotoToFirebase(albumId, photo, id)
 
-                return this.prisma.photo.create({
+                return await this.prisma.photo.create({
                     data: {
                         id,
-                        albumId,
-                        originalName: photo.originalname,
+                        album_id: albumId,
+                        original_name: photo.originalname,
                         url,
                         size: photo.size,
                         type: photo.mimetype,
@@ -40,7 +40,7 @@ export class PhotoService {
     }
 
     async getPhotos(albumId: string): Promise<Photo[]> {
-        return this.prisma.photo.findMany({ where: { albumId } })
+        return this.prisma.photo.findMany({ where: { album_id: albumId } })
     }
 
     private async uploadPhotoToFirebase(
