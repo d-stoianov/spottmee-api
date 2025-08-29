@@ -10,8 +10,7 @@ export const createAlbumSchema = z.object({
         .string({ error: 'Description should be a string type' })
         .min(2, { error: 'Description is too short' })
         .max(256, { error: 'Description is too long' })
-        .nullable()
-        .default(''),
+        .optional(),
     coverImage: fileImageSchema.optional(),
 })
 

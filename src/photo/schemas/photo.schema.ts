@@ -8,8 +8,7 @@ export const photoSchema = z.object({
     url: z
         .string()
         .describe('Hosted URL of the photo')
-        .nullable()
-        .default(null),
+        .optional(),
     size: z.number().int().describe('Size of the photo in bytes'),
     type: z.string().describe('MIME type of the photo, e.g., image/jpeg'),
     createdAt: z.date().describe('Timestamp when the photo was created'),
