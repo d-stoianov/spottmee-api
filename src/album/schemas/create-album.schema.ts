@@ -8,7 +8,6 @@ export const createAlbumSchema = z.object({
         .max(32, { error: 'Name is too long' }),
     description: z
         .string({ error: 'Description should be a string type' })
-        .min(2, { error: 'Description is too short' })
         .max(256, { error: 'Description is too long' })
         .optional(),
     coverImage: fileImageSchema.optional(),
