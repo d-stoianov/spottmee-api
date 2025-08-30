@@ -91,7 +91,11 @@ export class AlbumService {
 
         return this.prisma.album.update({
             where: { creator_id: userId, id },
-            data: { name, description, cover_image_url: coverImageUrl },
+            data: {
+                ...(name !== undefined ? { name } : {}),
+                ...(description !== undefined ? { description } : {}),
+                ...(coverImageUrl ? { cover_image_url: coverImageUrl } : {}),
+            },
         })
     }
 

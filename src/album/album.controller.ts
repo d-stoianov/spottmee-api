@@ -19,7 +19,11 @@ import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
 
 import { createAlbumSchema } from '@/album/schemas/create-album.schema'
 import { updateAlbumSchema } from '@/album/schemas/update-album.schema'
-import { AlbumDto, albumSchema, serializeAlbum } from '@/album/schemas/album.schema'
+import {
+    AlbumDto,
+    albumSchema,
+    serializeAlbum,
+} from '@/album/schemas/album.schema'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { ApiNoContentResponse } from '@nestjs/swagger'
 
@@ -86,7 +90,7 @@ export class AlbumController {
 
         const dto = updateAlbumSchema.parse({
             ...body,
-            coverImage,
+            ...(coverImage ? { coverImage } : {}),
         })
 
         await this.albumService.assertUserHasAccess(
