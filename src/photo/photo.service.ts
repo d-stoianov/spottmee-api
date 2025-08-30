@@ -39,8 +39,19 @@ export class PhotoService {
         return uploadedPhotos
     }
 
-    async getPhotos(albumId: string): Promise<Photo[]> {
-        return this.prisma.photo.findMany({ where: { album_id: albumId } })
+    async getPhotos(
+        albumId: string,
+        offset: number,
+        size: number,
+    ): Promise<Photo[]> {
+        return this.prisma.photo.findMany({
+            where: { album_id: albumId },
+            skip: offset,
+            take: size,
+            orderBy: {
+                created_at: 'desc',
+            },
+        })
     }
 
     private async uploadPhotoToFirebase(

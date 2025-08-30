@@ -5,6 +5,7 @@ import {
     Get,
     Param,
     Post,
+    Query,
     UploadedFiles,
     UseGuards,
     UseInterceptors,
@@ -50,13 +51,22 @@ export class PhotoController {
     async getPhotosFromAlbum(
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
+        @Query('offset') offset = 0,
+        @Query('size') size = 20,
     ): Promise<PhotoDto[]> {
         await this.albumService.assertUserHasAccess(
             authContext.user.id,
             albumId,
         )
 
-        const photos = await this.photoService.getPhotos(albumId)
+        const offsetNum = Number(offset)
+        const sizeNum = Number(size)
+
+        const photos = await this.photoService.getPhotos(
+            albumId,
+            offsetNum,
+            sizeNum,
+        )
 
         return photos.map((p) => serializePhoto(p))
     }
