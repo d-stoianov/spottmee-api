@@ -36,7 +36,7 @@ model Photo {
   type          String
   created_at    DateTime    @default(now())
   status        PhotoStatus @default(UPLOADED)
-  album         Album       @relation(fields: [album_id], references: [id])
+  album         Album       @relation(fields: [album_id], references: [id], onDelete: Cascade)
 }
 
 enum PhotoStatus {
