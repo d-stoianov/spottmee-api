@@ -2,7 +2,11 @@ import {
     BadRequestException,
     Body,
     Controller,
+    Delete,
     Get,
+    HttpCode,
+    HttpStatus,
+    NotFoundException,
     Param,
     Post,
     Query,
@@ -17,6 +21,7 @@ import { AuthContextType, AuthGuard } from '@/auth/auth.guard'
 import { PhotoService } from '@/photo/photo.service'
 import { AlbumService } from '@/album/album.service'
 import { PhotoDto, serializePhoto } from '@/photo/schemas/photo.schema'
+import { ApiNoContentResponse } from '@nestjs/swagger'
 
 @UseGuards(AuthGuard)
 @Controller('albums/:id/photos')
@@ -69,5 +74,47 @@ export class PhotoController {
         )
 
         return photos.map((p) => serializePhoto(p))
+    }
+
+    @Get(':photoId')
+    async getPhotoById(
+        @AuthContext() authContext: AuthContextType,
+        @Param('id') albumId: string,
+        @Param('photoId') photoId: string,
+    ): Promise<PhotoDto> {
+        await this.albumService.assertUserHasAccess(
+            authContext.user.id,
+            albumId,
+        )
+
+        const photo = await this.photoService.getPhotoById(albumId, photoId)
+
+        if (!photo) {
+            throw new NotFoundException('Photo not found')
+        }
+
+        return serializePhoto(photo)
+    }
+
+    @Delete(':photoId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deletePhotoById(
+        @AuthContext() authContext: AuthContextType,
+        @Param('id') albumId: string,
+        @Param('photoId') photoId: string,
+    ) {
+        await this.albumService.assertUserHasAccess(
+            authContext.user.id,
+            albumId,
+        )
+
+        const deletedPhoto = await this.photoService.deletePhotoById(
+            albumId,
+            photoId,
+        )
+
+        if (!deletedPhoto) {
+            throw new NotFoundException('Photo not found')
+        }
     }
 }

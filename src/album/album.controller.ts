@@ -120,7 +120,5 @@ export class AlbumController {
         // TODO: cascade delete photos table
 
         await this.albumService.deleteAlbumById(authContext.user.id, albumId)
-
-        return ApiNoContentResponse
     }
 }
