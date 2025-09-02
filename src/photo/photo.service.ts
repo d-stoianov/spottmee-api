@@ -58,6 +58,12 @@ export class PhotoService {
         })
     }
 
+    async getPhotosCount(albumId: string): Promise<number> {
+        return this.prisma.photo.count({
+            where: { album_id: albumId },
+        })
+    }
+
     async getPhotoById(
         albumId: string,
         photoId: string,

@@ -21,7 +21,11 @@ import { AuthContextType, AuthGuard } from '@/auth/auth.guard'
 import { PhotoService } from '@/photo/photo.service'
 import { AlbumService } from '@/album/album.service'
 import { PhotoDto, serializePhoto } from '@/photo/schemas/photo.schema'
-import { ApiNoContentResponse } from '@nestjs/swagger'
+
+type PhotosResponse = {
+    photos: PhotoDto[]
+    total: number
+}
 
 @UseGuards(AuthGuard)
 @Controller('albums/:id/photos')
@@ -37,7 +41,7 @@ export class PhotoController {
         @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @UploadedFiles() files: Express.Multer.File[],
-    ): Promise<PhotoDto[]> {
+    ): Promise<PhotosResponse> {
         if (!files || files.length === 0) {
             throw new BadRequestException('No photos were uploaded')
         }
@@ -49,7 +53,10 @@ export class PhotoController {
 
         const photos = await this.photoService.uploadPhotos(albumId, files)
 
-        return photos.map((p) => serializePhoto(p))
+        return {
+            photos: photos.map((p) => serializePhoto(p)),
+            total: photos.length,
+        }
     }
 
     @Get()
@@ -58,7 +65,7 @@ export class PhotoController {
         @Param('id') albumId: string,
         @Query('offset') offset = 0,
         @Query('size') size = 20,
-    ): Promise<PhotoDto[]> {
+    ): Promise<PhotosResponse> {
         await this.albumService.assertUserHasAccess(
             authContext.user.id,
             albumId,
@@ -67,13 +74,15 @@ export class PhotoController {
         const offsetNum = Number(offset)
         const sizeNum = Number(size)
 
-        const photos = await this.photoService.getPhotos(
-            albumId,
-            offsetNum,
-            sizeNum,
-        )
+        const [photos, photosCount] = await Promise.all([
+            this.photoService.getPhotos(albumId, offsetNum, sizeNum),
+            this.photoService.getPhotosCount(albumId),
+        ])
 
-        return photos.map((p) => serializePhoto(p))
+        return {
+            photos: photos.map((p) => serializePhoto(p)),
+            total: photosCount,
+        }
     }
 
     @Get(':photoId')
