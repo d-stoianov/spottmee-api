@@ -20,7 +20,7 @@ import { AuthContext } from '@/auth/auth-context.decorator'
 import { AuthContextType, AuthGuard } from '@/auth/auth.guard'
 import { PhotoService } from '@/photo/photo.service'
 import { AlbumService } from '@/album/album.service'
-import { PhotoDto, serializePhoto } from '@/photo/schemas/photo.schema'
+import { PhotoDto } from '@/photo/schemas/photo.schema'
 
 type PhotosResponse = {
     photos: PhotoDto[]
@@ -54,7 +54,7 @@ export class PhotoController {
         const photos = await this.photoService.uploadPhotos(albumId, files)
 
         return {
-            photos: photos.map((p) => serializePhoto(p)),
+            photos: photos.map((p) => this.photoService.serialize(p)),
             total: photos.length,
         }
     }
@@ -80,7 +80,7 @@ export class PhotoController {
         ])
 
         return {
-            photos: photos.map((p) => serializePhoto(p)),
+            photos: photos.map((p) => this.photoService.serialize(p)),
             total: photosCount,
         }
     }
@@ -102,7 +102,7 @@ export class PhotoController {
             throw new NotFoundException('Photo not found')
         }
 
-        return serializePhoto(photo)
+        return this.photoService.serialize(photo)
     }
 
     @Delete(':photoId')

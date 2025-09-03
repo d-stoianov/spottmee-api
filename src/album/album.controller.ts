@@ -19,13 +19,8 @@ import { AuthGuard, AuthContextType } from '@/auth/auth.guard'
 
 import { createAlbumSchema } from '@/album/schemas/create-album.schema'
 import { updateAlbumSchema } from '@/album/schemas/update-album.schema'
-import {
-    AlbumDto,
-    albumSchema,
-    serializeAlbum,
-} from '@/album/schemas/album.schema'
+import { AlbumDto } from '@/album/schemas/album.schema'
 import { FilesInterceptor } from '@nestjs/platform-express'
-import { ApiNoContentResponse } from '@nestjs/swagger'
 
 @UseGuards(AuthGuard)
 @Controller('albums')
@@ -51,7 +46,7 @@ export class AlbumController {
             dto,
         )
 
-        return serializeAlbum(album)
+        return this.albumService.serialize(album)
     }
 
     @Get()
@@ -62,7 +57,7 @@ export class AlbumController {
             authContext.user.id,
         )
 
-        return albums.map((al) => serializeAlbum(al))
+        return albums.map((al) => this.albumService.serialize(al))
     }
 
     @Get(':id')
@@ -75,7 +70,7 @@ export class AlbumController {
             albumId,
         )
 
-        return serializeAlbum(album)
+        return this.albumService.serialize(album)
     }
 
     @Put(':id')
@@ -104,7 +99,7 @@ export class AlbumController {
             dto,
         )
 
-        return serializeAlbum(album)
+        return this.albumService.serialize(album)
     }
 
     @Delete(':id')

@@ -14,17 +14,4 @@ export const photoSchema = z.object({
         .describe('Current status of the photo'),
 })
 
-export const serializePhoto = (photo: Photo): PhotoDto => {
-    return photoSchema.parse({
-        id: photo.id,
-        albumId: photo.album_id,
-        originalName: photo.original_name,
-        url: photo.url,
-        size: photo.size,
-        type: photo.type,
-        createdAt: photo.created_at,
-        status: photo.status,
-    })
-}
-
 export type PhotoDto = z.infer<typeof photoSchema>

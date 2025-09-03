@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common'
-import { Album, Photo } from '@prisma/client'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { Photo } from '@prisma/client'
 import { v4 as uuidv4 } from 'uuid'
 
 import { FirebaseService } from '@/firebase/firebase.service'
 import { PrismaService } from '@/prisma/prisma.service'
-import { size } from 'zod'
+import { PhotoDto, photoSchema } from '@/photo/schemas/photo.schema'
 
 @Injectable()
 export class PhotoService {
@@ -22,16 +22,18 @@ export class PhotoService {
                 const id = uuidv4()
 
                 const url = await this.firebase.uploadFile(
-                    `albums/${albumId}`,
                     photo,
+                    `albums/${albumId}`,
                 )
+
+                const normalizedPhotoName = url.split('/').pop()
 
                 return await this.prisma.photo.create({
                     data: {
                         id,
                         album_id: albumId,
                         original_name: photo.originalname,
-                        url,
+                        normalized_name: normalizedPhotoName!,
                         size: photo.size,
                         type: photo.mimetype,
                         status: 'UPLOADED',
@@ -77,6 +79,20 @@ export class PhotoService {
         albumId: string,
         photoId: string,
     ): Promise<Photo | null> {
+        const photo = await this.prisma.photo.findFirst({
+            where: { id: photoId, album_id: albumId },
+        })
+
+        if (!photo) {
+            throw new NotFoundException('Photo not found')
+        }
+
+        // delete photo from the bucket
+        await this.firebase.deleteFile(
+            `albums/${albumId}/${photo.normalized_name}`,
+        )
+
+        // delete in the db
         const deleted = await this.prisma.photo.deleteMany({
             where: { album_id: albumId, id: photoId },
         })
@@ -86,5 +102,20 @@ export class PhotoService {
         }
 
         return { id: photoId, album_id: albumId } as Photo
+    }
+
+    public serialize(photo: Photo): PhotoDto {
+        const photoUrl = `${this.firebase.getPublicBucketLink()}/albums/${photo.album_id}/${photo.normalized_name}`
+
+        return photoSchema.parse({
+            id: photo.id,
+            albumId: photo.album_id,
+            originalName: photo.original_name,
+            url: photoUrl,
+            size: photo.size,
+            type: photo.type,
+            createdAt: photo.created_at,
+            status: photo.status,
+        })
     }
 }

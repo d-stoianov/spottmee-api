@@ -9,6 +9,7 @@ import { PrismaService } from '@/prisma/prisma.service'
 import { CreateAlbumDto } from './schemas/create-album.schema'
 import { UpdateAlbumDto } from './schemas/update-album.schema'
 import { FirebaseService } from '@/firebase/firebase.service'
+import { AlbumDto, albumSchema } from '@/album/schemas/album.schema'
 
 @Injectable()
 export class AlbumService {
@@ -31,19 +32,20 @@ export class AlbumService {
             },
         })
 
-        let coverImageUrl: string | null = null
+        let coverImageName: string | undefined = undefined
 
         if (coverImage) {
-            coverImageUrl = await this.firebase.uploadFile(
-                `albums/${album.id}`,
+            const coverImageUrl = await this.firebase.uploadFile(
                 coverImage,
+                `albums/${album.id}`,
             )
+            coverImageName = coverImageUrl.split('/').pop()
         }
 
         return this.prisma.album.update({
             where: { id: album.id },
             data: {
-                cover_image_url: coverImageUrl,
+                cover_image_name: coverImageName,
             },
         })
     }
@@ -77,16 +79,26 @@ export class AlbumService {
     ): Promise<Album> {
         const { name, description, coverImage } = albumDto
 
-        let coverImageUrl: string | null = null
+        const oldAlbum = await this.prisma.album.findFirst({
+            where: { id, creator_id: userId },
+        })
+
+        let coverImageName: string | undefined = undefined
 
         // upload new album cover to the bucket
         if (coverImage) {
-            coverImageUrl = await this.firebase.uploadFile(
-                `albums/${id}`,
+            const coverImageUrl = await this.firebase.uploadFile(
                 coverImage,
+                `albums/${id}`,
             )
+            coverImageName = coverImageUrl.split('/').pop()
 
-            // TODO: initiate a job to remove old cover from the bucket
+            // delete old album cover from the bucket
+            if (oldAlbum?.cover_image_name) {
+                await this.firebase.deleteFile(
+                    `albums/${id}/${oldAlbum.cover_image_name}`,
+                )
+            }
         }
 
         return this.prisma.album.update({
@@ -94,16 +106,42 @@ export class AlbumService {
             data: {
                 ...(name !== undefined ? { name } : {}),
                 ...(description !== undefined ? { description } : {}),
-                ...(coverImageUrl ? { cover_image_url: coverImageUrl } : {}),
+                ...(coverImageName ? { cover_image_name: coverImageName } : {}),
             },
         })
     }
 
     async deleteAlbumById(userId: string, id: string): Promise<Album | null> {
-        // initiate a job to delete album cover, album photo from the bucket
+        try {
+            // clear everything in the bucket under albums/albumId path
+            const folderPath = `albums/${id}`
+            const files = await this.firebase.listFiles(folderPath)
 
-        return this.prisma.album.delete({
-            where: { creator_id: userId, id },
+            if (files.length) {
+                await Promise.all(
+                    files.map((filePath) => this.firebase.deleteFile(filePath)),
+                )
+            }
+        } catch (error) {
+            console.error("Couldn't cleanup the bucket - ", error)
+        } finally {
+            return this.prisma.album.delete({
+                where: { creator_id: userId, id },
+            })
+        }
+    }
+
+    public serialize(album: Album): AlbumDto {
+        const coverImageUrl = album.cover_image_name
+            ? `${this.firebase.getPublicBucketLink()}/albums/${album.id}/${album.cover_image_name}`
+            : undefined
+
+        return albumSchema.parse({
+            id: album.id,
+            name: album.name,
+            createdAt: album.createdAt,
+            description: album.description ?? undefined,
+            coverImageUrl: coverImageUrl,
         })
     }
 }
