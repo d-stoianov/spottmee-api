@@ -16,8 +16,8 @@ import {
 } from '@nestjs/common'
 import { FilesInterceptor } from '@nestjs/platform-express'
 
-import { AuthContext } from '@/auth/auth-context.decorator'
-import { AuthContextType, AuthGuard } from '@/auth/auth.guard'
+import { AuthGuard } from '@/auth/auth.guard'
+import { AlbumAccessGuard } from '@/album/album.guard'
 import { PhotoService } from '@/photo/photo.service'
 import { AlbumService } from '@/album/album.service'
 import { PhotoDto } from '@/photo/schemas/photo.schema'
@@ -27,7 +27,7 @@ type PhotosResponse = {
     total: number
 }
 
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, AlbumAccessGuard)
 @Controller('albums/:id/photos')
 export class PhotoController {
     constructor(
@@ -38,18 +38,12 @@ export class PhotoController {
     @Post()
     @UseInterceptors(FilesInterceptor('photos', 500))
     async uploadPhotos(
-        @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @UploadedFiles() files: Express.Multer.File[],
     ): Promise<PhotosResponse> {
         if (!files || files.length === 0) {
             throw new BadRequestException('No photos were uploaded')
         }
-
-        await this.albumService.assertUserHasAccess(
-            authContext.user.id,
-            albumId,
-        )
 
         const photos = await this.photoService.uploadPhotos(albumId, files)
 
@@ -61,16 +55,10 @@ export class PhotoController {
 
     @Get()
     async getPhotosFromAlbum(
-        @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @Query('offset') offset = 0,
         @Query('size') size = 20,
     ): Promise<PhotosResponse> {
-        await this.albumService.assertUserHasAccess(
-            authContext.user.id,
-            albumId,
-        )
-
         const offsetNum = Number(offset)
         const sizeNum = Number(size)
 
@@ -87,15 +75,9 @@ export class PhotoController {
 
     @Get(':photoId')
     async getPhotoById(
-        @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @Param('photoId') photoId: string,
     ): Promise<PhotoDto> {
-        await this.albumService.assertUserHasAccess(
-            authContext.user.id,
-            albumId,
-        )
-
         const photo = await this.photoService.getPhotoById(albumId, photoId)
 
         if (!photo) {
@@ -108,15 +90,9 @@ export class PhotoController {
     @Delete(':photoId')
     @HttpCode(HttpStatus.NO_CONTENT)
     async deletePhotoById(
-        @AuthContext() authContext: AuthContextType,
         @Param('id') albumId: string,
         @Param('photoId') photoId: string,
     ) {
-        await this.albumService.assertUserHasAccess(
-            authContext.user.id,
-            albumId,
-        )
-
         const deletedPhoto = await this.photoService.deletePhotoById(
             albumId,
             photoId,
