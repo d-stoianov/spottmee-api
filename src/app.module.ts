@@ -7,6 +7,7 @@ import { AuthModule } from '@/auth/auth.module'
 import { UserModule } from '@/user/user.module'
 import { AlbumModule } from '@/album/album.module'
 import { PhotoModule } from '@/photo/photo.module'
+import { MatchAlbumModule } from '@/match-album/match-album.module'
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { PhotoModule } from '@/photo/photo.module'
         AuthModule,
         UserModule,
         AlbumModule,
+        MatchAlbumModule,
         PhotoModule,
     ],
 })

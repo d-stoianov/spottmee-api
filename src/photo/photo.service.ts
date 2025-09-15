@@ -66,6 +66,31 @@ export class PhotoService {
         })
     }
 
+    async getRandomPhotos(albumId: string, size: number): Promise<Photo[]> {
+        const photosCount = await this.prisma.photo.count({
+            where: { album_id: albumId },
+        })
+
+        if (photosCount === 0) return []
+
+        const maxPreview = Math.min(size, photosCount)
+
+        const randomOffsets = Array.from(
+            new Set(
+                Array.from({ length: maxPreview }, () =>
+                    Math.floor(Math.random() * photosCount),
+                ),
+            ),
+        ).slice(0, maxPreview)
+
+        const photoPromises = randomOffsets.map((offset) =>
+            this.getPhotos(albumId, offset, 1),
+        )
+        const photoResults = await Promise.all(photoPromises)
+
+        return photoResults.flat()
+    }
+
     async getPhotoById(
         albumId: string,
         photoId: string,
@@ -105,17 +130,19 @@ export class PhotoService {
     }
 
     public serialize(photo: Photo): PhotoDto {
-        const photoUrl = `${this.firebase.getPublicBucketLink()}/albums/${photo.album_id}/${photo.normalized_name}`
-
         return photoSchema.parse({
             id: photo.id,
             albumId: photo.album_id,
             originalName: photo.original_name,
-            url: photoUrl,
+            url: this.getPhotoUrl(photo),
             size: photo.size,
             type: photo.type,
             createdAt: photo.created_at,
             status: photo.status,
         })
+    }
+
+    public getPhotoUrl(photo: Photo): string {
+        return `${this.firebase.getPublicBucketLink()}/albums/${photo.album_id}/${photo.normalized_name}`
     }
 }

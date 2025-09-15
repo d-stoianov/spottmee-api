@@ -10,12 +10,20 @@ import { CreateAlbumDto } from './schemas/create-album.schema'
 import { UpdateAlbumDto } from './schemas/update-album.schema'
 import { FirebaseService } from '@/firebase/firebase.service'
 import { AlbumDto, albumSchema } from '@/album/schemas/album.schema'
+import {
+    MatchAlbumDto,
+    matchAlbumSchema,
+} from '@/match-album/schemas/match-album.schema'
+import { UserService } from '@/user/user.service'
+import { PhotoService } from '@/photo/photo.service'
 
 @Injectable()
 export class AlbumService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly firebase: FirebaseService,
+        private readonly photoService: PhotoService,
+        private readonly userService: UserService,
     ) {}
 
     async createAlbum(
@@ -64,6 +72,12 @@ export class AlbumService {
         }
 
         return album
+    }
+
+    async getAlbum(id: string): Promise<Album | null> {
+        return this.prisma.album.findFirst({
+            where: { id },
+        })
     }
 
     async getAlbumsByUserId(userId: string): Promise<Album[]> {
@@ -131,7 +145,7 @@ export class AlbumService {
         }
     }
 
-    public serialize(album: Album): AlbumDto {
+    public serializeToAlbumDto(album: Album): AlbumDto {
         const coverImageUrl = album.cover_image_name
             ? `${this.firebase.getPublicBucketLink()}/albums/${album.id}/${album.cover_image_name}`
             : undefined
@@ -139,6 +153,38 @@ export class AlbumService {
         return albumSchema.parse({
             id: album.id,
             name: album.name,
+            createdAt: album.createdAt,
+            description: album.description ?? undefined,
+            coverImageUrl: coverImageUrl,
+        })
+    }
+
+    public async serializeToMatchAlbumDto(
+        album: Album,
+    ): Promise<MatchAlbumDto> {
+        const coverImageUrl = album.cover_image_name
+            ? `${this.firebase.getPublicBucketLink()}/albums/${album.id}/${album.cover_image_name}`
+            : undefined
+        const user = await this.userService.getUser(album.creator_id)
+
+        if (!user) throw new Error(`No user found by id - ${album.creator_id}`)
+
+        const photosCount = await this.photoService.getPhotosCount(album.id)
+
+        const MAX_PREVIEW_PHOTOS = 10
+        const previewPhotos = await this.photoService.getRandomPhotos(
+            album.id,
+            MAX_PREVIEW_PHOTOS,
+        )
+
+        return matchAlbumSchema.parse({
+            id: album.id,
+            name: album.name,
+            creator: user.name,
+            totalPhotosCount: photosCount,
+            previewPhotos: previewPhotos.map((photo) =>
+                this.photoService.getPhotoUrl(photo),
+            ),
             createdAt: album.createdAt,
             description: album.description ?? undefined,
             coverImageUrl: coverImageUrl,

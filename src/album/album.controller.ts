@@ -46,7 +46,7 @@ export class AlbumController {
             dto,
         )
 
-        return this.albumService.serialize(album)
+        return this.albumService.serializeToAlbumDto(album)
     }
 
     @Get()
@@ -57,7 +57,7 @@ export class AlbumController {
             authContext.user.id,
         )
 
-        return albums.map((al) => this.albumService.serialize(al))
+        return albums.map((al) => this.albumService.serializeToAlbumDto(al))
     }
 
     @Get(':id')
@@ -70,7 +70,7 @@ export class AlbumController {
             albumId,
         )
 
-        return this.albumService.serialize(album)
+        return this.albumService.serializeToAlbumDto(album)
     }
 
     @Put(':id')
@@ -99,7 +99,7 @@ export class AlbumController {
             dto,
         )
 
-        return this.albumService.serialize(album)
+        return this.albumService.serializeToAlbumDto(album)
     }
 
     @Delete(':id')

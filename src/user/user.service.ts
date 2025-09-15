@@ -9,4 +9,8 @@ export class UserService {
     deleteUser(id: string) {
         return this.prisma.user.delete({ where: { id } })
     }
+
+    getUser(id: string) {
+        return this.prisma.user.findFirst({ where: { id } })
+    }
 }
