@@ -46,14 +46,19 @@ export class AuthService {
             .getAuth()
             .verifyIdToken(idToken)
 
-        const { uid, email, name } = decoded
+        const { uid, email, name, picture } = decoded
 
         if (!email) throw new BadRequestException('No email provided')
 
         let user = await this.prisma.user.findUnique({ where: { uid } })
         if (!user) {
             user = await this.prisma.user.create({
-                data: { uid, email, name },
+                data: {
+                    uid,
+                    email,
+                    name: typeof name === 'string' ? name : undefined,
+                    picture,
+                },
             })
         }
 
