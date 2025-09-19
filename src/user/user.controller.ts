@@ -3,6 +3,8 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     Put,
     UploadedFile,
     UseGuards,
@@ -25,9 +27,10 @@ export class UserController {
         return authContext.user
     }
 
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Delete()
-    deleteUser(@AuthContext() authContext: AuthContextType) {
-        return this.userService.deleteUser(authContext.user.id)
+    async deleteUser(@AuthContext() authContext: AuthContextType) {
+        await this.userService.deleteUser(authContext.user.id)
     }
 
     @Put()

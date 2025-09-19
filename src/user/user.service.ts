@@ -11,7 +11,16 @@ export class UserService {
         private readonly firebase: FirebaseService,
     ) {}
 
-    deleteUser(id: string) {
+    async deleteUser(id: string) {
+        const user = await this.prisma.user.findFirst({ where: { id } })
+        if (!user) throw new Error('User not found')
+
+        // delete user from firebase
+        if (user.uid) {
+            await this.firebase.getAuth().deleteUser(user.uid)
+        }
+
+        // delete user from db
         return this.prisma.user.delete({ where: { id } })
     }
 
