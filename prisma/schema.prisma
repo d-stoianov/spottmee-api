@@ -13,8 +13,8 @@ model User {
   uid        String   @unique
   email      String   @unique
   name       String?
-  picture    String?
   created_at DateTime @default(now())
+  picture    String?
   albums     Album[]
 }
 
@@ -23,9 +23,9 @@ model Album {
   creator_id       String
   name             String
   description      String?
-  cover_image_name String? // normalized file name that is in the bucket
+  cover_image_name String?
   createdAt        DateTime @default(now())
-  creator          User     @relation(fields: [creator_id], references: [id], onDelete: Cascade)
+  creator          User     @relation(fields: [creator_id], references: [id])
   photos           Photo[]
 }
 
@@ -33,7 +33,7 @@ model Photo {
   id              String      @id @default(uuid())
   album_id        String
   original_name   String
-  normalized_name String // normalized file name that is in the bucket
+  normalized_name String
   size            Int
   type            String
   created_at      DateTime    @default(now())
