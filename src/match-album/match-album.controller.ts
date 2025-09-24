@@ -62,6 +62,9 @@ export class MatchAlbumController {
             selfie[0].buffer.toString('base64'),
         )
 
+        const matchResultKey = `match-result:${matchId}`
+        await this.redisService.set(matchResultKey, 'INITIATED')
+
         return matchId
     }
 
@@ -90,7 +93,7 @@ export class MatchAlbumController {
             matches: [],
         }
 
-        if (matchResult === 'PROCESSING') {
+        if (matchResult === 'PROCESSING' || matchResult === 'INITIATED') {
             return matchResultDto
         }
 
