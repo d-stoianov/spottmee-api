@@ -1,6 +1,5 @@
 import {
     BadRequestException,
-    Body,
     Controller,
     Delete,
     Get,
@@ -19,8 +18,8 @@ import { FilesInterceptor } from '@nestjs/platform-express'
 import { AuthGuard } from '@/auth/auth.guard'
 import { AlbumAccessGuard } from '@/album/album.guard'
 import { PhotoService } from '@/photo/photo.service'
-import { AlbumService } from '@/album/album.service'
 import { PhotoDto } from '@/photo/schemas/photo.schema'
+import { QueueService } from '@/queue/queue.service'
 
 type PhotosResponse = {
     photos: PhotoDto[]
@@ -32,7 +31,7 @@ type PhotosResponse = {
 export class PhotoController {
     constructor(
         private readonly photoService: PhotoService,
-        private readonly albumService: AlbumService,
+        private readonly queueService: QueueService,
     ) {}
 
     @Post()
@@ -47,8 +46,22 @@ export class PhotoController {
 
         const photos = await this.photoService.uploadPhotos(albumId, files)
 
+        const serializedPhotos = photos.map((p) =>
+            this.photoService.serialize(p),
+        )
+
+        // put photos into queue to start processing
+        await Promise.all(
+            serializedPhotos.map((photo) => {
+                return this.queueService.addProcessJob(
+                    photo.url,
+                    `${albumId}/${photo.id}`,
+                )
+            }),
+        )
+
         return {
-            photos: photos.map((p) => this.photoService.serialize(p)),
+            photos: serializedPhotos,
             total: photos.length,
         }
     }

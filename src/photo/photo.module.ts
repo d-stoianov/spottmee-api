@@ -8,5 +8,6 @@ import { AlbumModule } from '@/album/album.module'
     imports: [AlbumModule],
     providers: [PhotoService],
     controllers: [PhotoController],
+    exports: [PhotoService],
 })
 export class PhotoModule {}

@@ -47,13 +47,13 @@ export class PhotoService {
 
     async getPhotos(
         albumId: string,
-        offset: number,
-        size: number,
+        offset?: number,
+        size?: number,
     ): Promise<Photo[]> {
         return this.prisma.photo.findMany({
             where: { album_id: albumId },
-            skip: offset,
-            take: size,
+            ...(offset !== undefined ? { skip: offset } : {}),
+            ...(size !== undefined ? { take: size } : {}),
             orderBy: {
                 created_at: 'desc',
             },
@@ -72,6 +72,9 @@ export class PhotoService {
         })
 
         if (photosCount === 0) return []
+        if (photosCount <= size) {
+            return this.getPhotos(albumId, 0, size)
+        }
 
         const maxPreview = Math.min(size, photosCount)
 
