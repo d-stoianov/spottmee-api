@@ -138,11 +138,10 @@ export class AlbumService {
             }
         } catch (error) {
             console.error("Couldn't cleanup the bucket - ", error)
-        } finally {
-            return this.prisma.album.delete({
-                where: { creator_id: userId, id },
-            })
         }
+        return this.prisma.album.delete({
+            where: { creator_id: userId, id },
+        })
     }
 
     public serializeToAlbumDto(album: Album): AlbumDto {
