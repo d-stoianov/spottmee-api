@@ -20,12 +20,7 @@ import { AlbumAccessGuard } from '@/album/album.guard'
 import { PhotoService } from '@/photo/photo.service'
 import { PhotoDto } from '@/photo/schemas/photo.schema'
 import { QueueService } from '@/queue/queue.service'
-
-type PhotosResponse = {
-    photos: PhotoDto[]
-    total: number
-    readyCount: number
-}
+import { PhotosResponseDto } from '@/photo/schemas/photos-response.schema'
 
 @UseGuards(AuthGuard, AlbumAccessGuard)
 @Controller('albums/:id/photos')
@@ -40,7 +35,7 @@ export class PhotoController {
     async uploadPhotos(
         @Param('id') albumId: string,
         @UploadedFiles() files: Express.Multer.File[],
-    ): Promise<PhotosResponse> {
+    ): Promise<PhotosResponseDto> {
         if (!files || files.length === 0) {
             throw new BadRequestException('No photos were uploaded')
         }
@@ -70,7 +65,7 @@ export class PhotoController {
         @Param('id') albumId: string,
         @Query('offset') offset = 0,
         @Query('size') size = 20,
-    ): Promise<PhotosResponse> {
+    ): Promise<PhotosResponseDto> {
         const offsetNum = Number(offset)
         const sizeNum = Number(size)
 

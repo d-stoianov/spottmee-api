@@ -4,6 +4,7 @@ import {
     NotFoundException,
     Param,
     Post,
+    Query,
     UploadedFiles,
     UseInterceptors,
 } from '@nestjs/common'
@@ -72,6 +73,8 @@ export class MatchAlbumController {
     async getMatchResult(
         @Param('id') albumId: string,
         @Param('matchId') matchId: string,
+        @Query('offset') offset = 0,
+        @Query('size') size = 20,
     ): Promise<MatchResultDto> {
         const album = await this.albumService.getAlbum(albumId)
 
@@ -91,6 +94,7 @@ export class MatchAlbumController {
             id: matchId,
             status: 'PROCESSING',
             matches: [],
+            total: 0,
         }
 
         if (matchResult === 'PROCESSING' || matchResult === 'INITIATED') {
@@ -99,15 +103,22 @@ export class MatchAlbumController {
 
         const matchedIds: string[] = JSON.parse(matchResult) as string[]
 
+        const start = Number(offset)
+        const end = start + Number(size)
+        const paginatedIds = matchedIds.slice(start, end)
+
         const allPhotos = await this.photoService.getPhotos(album.id)
-        const filteredPhotos = allPhotos.filter(
-            (photo) => matchedIds.includes(photo.id), // keep the same format as we wrote to that queue
+        const filteredPhotos = allPhotos.filter((photo) =>
+            paginatedIds.includes(photo.id),
+        )
+
+        const photoDtos = filteredPhotos.map((photo) =>
+            this.photoService.serialize(photo),
         )
 
         matchResultDto.status = 'READY'
-        matchResultDto.matches = filteredPhotos.map((photo) =>
-            this.photoService.serialize(photo),
-        )
+        matchResultDto.matches = photoDtos
+        matchResultDto.total = matchedIds.length
 
         return matchResultDto
     }
