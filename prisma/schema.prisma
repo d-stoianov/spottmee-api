@@ -44,6 +44,7 @@ model Photo {
 enum PhotoStatus {
   UPLOADED
   PROCESSING
-  READY
+  NO_FACES_FOUND
   FAILED
+  READY
 }

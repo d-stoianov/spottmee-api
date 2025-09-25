@@ -9,7 +9,7 @@ export const photoSchema = z.object({
     type: z.string().describe('MIME type of the photo, e.g., image/jpeg'),
     createdAt: z.date().describe('Timestamp when the photo was created'),
     status: z
-        .enum(['UPLOADED', 'PROCESSING', 'READY', 'FAILED'])
+        .enum(['UPLOADED', 'PROCESSING', 'NO_FACES_FOUND', 'FAILED', 'READY'])
         .describe('Current status of the photo'),
 })
 
