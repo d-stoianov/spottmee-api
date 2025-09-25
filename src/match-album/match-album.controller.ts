@@ -1,13 +1,16 @@
 import {
     Controller,
     Get,
+    InternalServerErrorException,
     NotFoundException,
     Param,
     Post,
     Query,
+    Res,
     UploadedFiles,
     UseInterceptors,
 } from '@nestjs/common'
+import { Response } from 'express'
 
 import { AlbumService } from '@/album/album.service'
 import { MatchAlbumDto } from '@/match-album/schemas/match-album.schema'
@@ -15,8 +18,12 @@ import { QueueService } from '@/queue/queue.service'
 import { FilesInterceptor } from '@nestjs/platform-express'
 import { PhotoService } from '@/photo/photo.service'
 import { v4 as uuid } from 'uuid'
+import * as archiver from 'archiver'
 import { RedisService } from '@/queue/redis.service'
 import { MatchResultDto } from '@/match-album/schemas/match-result.schema'
+import * as https from 'node:https'
+import * as http from 'node:http'
+import { PhotoDto } from '@/photo/schemas/photo.schema'
 
 @Controller('match-albums/:id')
 export class MatchAlbumController {
@@ -121,5 +128,80 @@ export class MatchAlbumController {
         matchResultDto.total = matchedIds.length
 
         return matchResultDto
+    }
+
+    @Get(':matchId/download')
+    async downloadMatchedPhotos(
+        @Param('id') albumId: string,
+        @Param('matchId') matchId: string,
+        @Res() res: Response,
+    ): Promise<void> {
+        const album = await this.albumService.getAlbum(albumId)
+        if (!album) throw new NotFoundException('Album not found')
+
+        const matchResultKey = `match-result:${matchId}`
+        const matchResult = await this.redisService.get(matchResultKey)
+        if (!matchResult) throw new NotFoundException('Match result not found')
+
+        if (matchResult === 'PROCESSING' || matchResult === 'INITIATED') {
+            throw new NotFoundException('Match result not ready for download')
+        }
+
+        const matchedIds: string[] = JSON.parse(matchResult) as string[]
+        if (matchedIds.length === 0)
+            throw new NotFoundException('No matched photos to download')
+
+        const allPhotos = await this.photoService.getPhotos(album.id)
+        const filteredPhotos = allPhotos.filter((photo) =>
+            matchedIds.includes(photo.id),
+        )
+        const photoDtos = filteredPhotos.map((photo) =>
+            this.photoService.serialize(photo),
+        )
+
+        console.log('photoDtos', photoDtos)
+
+        res.set({
+            'Content-Type': 'application/zip',
+            'Content-Disposition': `attachment; filename="spottmee-matched-${matchId}.zip"`,
+        })
+
+        const zip = archiver('zip', { zlib: { level: 9 } })
+        zip.pipe(res as unknown as NodeJS.WritableStream)
+
+        const addPhotoToZip = (photo: PhotoDto): Promise<void> => {
+            return new Promise((resolve, reject) => {
+                const client = photo.url.startsWith('https') ? https : http
+                client
+                    .get(photo.url, (stream) => {
+                        zip.append(stream, {
+                            name: filteredPhotos[
+                                filteredPhotos.findIndex(
+                                    (p) => p.id === photo.id,
+                                )
+                            ].normalized_name,
+                        })
+                        stream.on('end', resolve)
+                        stream.on('error', reject)
+                    })
+                    .on('error', reject)
+            })
+        }
+
+        try {
+            for (const photo of photoDtos) {
+                await addPhotoToZip(photo) // sequentially fetch and append
+            }
+            await zip.finalize()
+        } catch (err) {
+            console.error('Error creating zip:', err)
+            if (err instanceof Error) {
+                throw new InternalServerErrorException(err.message)
+            }
+        }
+
+        zip.on('error', (err) => {
+            throw new InternalServerErrorException(err.message)
+        })
     }
 }
