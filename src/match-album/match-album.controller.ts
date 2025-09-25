@@ -52,7 +52,7 @@ export class MatchAlbumController {
 
         const photos = await this.photoService.getPhotos(album.id)
 
-        const storedIds = photos.map((photo) => `${albumId}/${photo.id}`)
+        const storedIds = photos.map((photo) => photo.id)
 
         const matchId = uuid()
 
@@ -101,7 +101,7 @@ export class MatchAlbumController {
 
         const allPhotos = await this.photoService.getPhotos(album.id)
         const filteredPhotos = allPhotos.filter(
-            (photo) => matchedIds.includes(`${albumId}/${photo.id}`), // keep the same format as we wrote to that queue
+            (photo) => matchedIds.includes(photo.id), // keep the same format as we wrote to that queue
         )
 
         matchResultDto.status = 'READY'

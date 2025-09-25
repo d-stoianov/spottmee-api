@@ -53,10 +53,7 @@ export class PhotoController {
         // put photos into queue to start processing
         await Promise.all(
             serializedPhotos.map((photo) => {
-                return this.queueService.addProcessJob(
-                    photo.url,
-                    `${albumId}/${photo.id}`,
-                )
+                return this.queueService.addProcessJob(photo.url, photo.id)
             }),
         )
 
