@@ -24,6 +24,7 @@ import { QueueService } from '@/queue/queue.service'
 type PhotosResponse = {
     photos: PhotoDto[]
     total: number
+    readyCount: number
 }
 
 @UseGuards(AuthGuard, AlbumAccessGuard)
@@ -60,6 +61,7 @@ export class PhotoController {
         return {
             photos: serializedPhotos,
             total: photos.length,
+            readyCount: 0,
         }
     }
 
@@ -72,14 +74,16 @@ export class PhotoController {
         const offsetNum = Number(offset)
         const sizeNum = Number(size)
 
-        const [photos, photosCount] = await Promise.all([
+        const [photos, photosCount, readyCount] = await Promise.all([
             this.photoService.getPhotos(albumId, offsetNum, sizeNum),
             this.photoService.getPhotosCount(albumId),
+            this.photoService.getReadyCount(albumId),
         ])
 
         return {
             photos: photos.map((p) => this.photoService.serialize(p)),
             total: photosCount,
+            readyCount: readyCount,
         }
     }
 

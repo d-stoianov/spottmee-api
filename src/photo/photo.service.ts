@@ -17,7 +17,7 @@ export class PhotoService {
         albumId: string,
         photos: Express.Multer.File[],
     ): Promise<Photo[]> {
-        const uploadedPhotos = await Promise.all(
+        return await Promise.all(
             photos.map(async (photo) => {
                 const id = uuidv4()
 
@@ -28,7 +28,7 @@ export class PhotoService {
 
                 const normalizedPhotoName = url.split('/').pop()
 
-                return await this.prisma.photo.create({
+                return this.prisma.photo.create({
                     data: {
                         id,
                         album_id: albumId,
@@ -41,8 +41,6 @@ export class PhotoService {
                 })
             }),
         )
-
-        return uploadedPhotos
     }
 
     async getPhotos(
@@ -63,6 +61,12 @@ export class PhotoService {
     async getPhotosCount(albumId: string): Promise<number> {
         return this.prisma.photo.count({
             where: { album_id: albumId },
+        })
+    }
+
+    async getReadyCount(albumId: string): Promise<number> {
+        return this.prisma.photo.count({
+            where: { album_id: albumId, status: 'READY' },
         })
     }
 
