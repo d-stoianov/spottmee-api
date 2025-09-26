@@ -5,10 +5,12 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    InternalServerErrorException,
     NotFoundException,
     Param,
     Post,
     Query,
+    Res,
     UploadedFiles,
     UseGuards,
     UseInterceptors,
@@ -21,6 +23,7 @@ import { PhotoService } from '@/photo/photo.service'
 import { PhotoDto } from '@/photo/schemas/photo.schema'
 import { QueueService } from '@/queue/queue.service'
 import { PhotosResponseDto } from '@/photo/schemas/photos-response.schema'
+import { Response } from 'express'
 
 @UseGuards(AuthGuard, AlbumAccessGuard)
 @Controller('albums/:id/photos')
@@ -80,6 +83,24 @@ export class PhotoController {
             total: photosCount,
             readyCount: readyCount,
         }
+    }
+
+    @Get('/download')
+    async downloadMatchedPhotos(
+        @Param('id') albumId: string,
+        @Res() res: Response,
+    ): Promise<void> {
+        res.set({
+            'Content-Type': 'application/zip',
+            'Content-Disposition': `attachment; filename="spottmee-album-${albumId}.zip"`,
+        })
+
+        const zip = await this.photoService.createPhotoZip(albumId)
+        zip.pipe(res as unknown as NodeJS.WritableStream)
+
+        zip.on('error', (err) => {
+            throw new InternalServerErrorException(err.message)
+        })
     }
 
     @Get(':photoId')
