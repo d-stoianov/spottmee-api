@@ -1,10 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common'
 import { Photo } from '@prisma/client'
 import { v4 as uuidv4 } from 'uuid'
 
 import { FirebaseService } from '@/firebase/firebase.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { PhotoDto, photoSchema } from '@/photo/schemas/photo.schema'
+import * as archiver from 'archiver'
+import * as https from 'node:https'
+import * as http from 'node:http'
 
 @Injectable()
 export class PhotoService {
@@ -134,6 +141,61 @@ export class PhotoService {
         }
 
         return { id: photoId, album_id: albumId } as Photo
+    }
+
+    async createPhotoZip(
+        albumId: string,
+        photoIds?: string[],
+    ): Promise<archiver.Archiver> {
+        const allPhotos = await this.getPhotos(albumId)
+        let filteredPhotos = await this.getPhotos(albumId)
+
+        // filter by a subset of photos in the album
+        if (photoIds && photoIds.length) {
+            filteredPhotos = allPhotos.filter((p) => photoIds.includes(p.id))
+        }
+
+        if (!filteredPhotos.length) {
+            throw new InternalServerErrorException('No photos to zip')
+        }
+
+        const photoDtos = filteredPhotos.map((p) => this.serialize(p))
+
+        const zip = archiver('zip', { zlib: { level: 9 } })
+
+        await Promise.all(
+            photoDtos.map(
+                (photo) =>
+                    new Promise<void>((resolve, reject) => {
+                        const client = photo.url.startsWith('https')
+                            ? https
+                            : http
+                        client
+                            .get(photo.url, (res) => {
+                                if (res.statusCode && res.statusCode >= 400) {
+                                    return reject(
+                                        new Error(
+                                            `Failed to fetch ${photo.url}`,
+                                        ),
+                                    )
+                                }
+                                // getting url property from PhotoDto and
+                                // normalized_name from Photo (DB)
+                                zip.append(res, {
+                                    name: filteredPhotos.find(
+                                        (p) => p.id === photo.id,
+                                    )!.normalized_name,
+                                })
+                                resolve()
+                            })
+                            .on('error', reject)
+                    }),
+            ),
+        )
+
+        zip.finalize().catch((err) => zip.emit('error', err))
+
+        return zip
     }
 
     public serialize(photo: Photo): PhotoDto {

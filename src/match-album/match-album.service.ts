@@ -9,10 +9,6 @@ import { QueueService } from '@/queue/queue.service'
 import { RedisService } from '@/queue/redis.service'
 import { v4 as uuid } from 'uuid'
 import { MatchResultDto } from './schemas/match-result.schema'
-import { PhotoDto } from '@/photo/schemas/photo.schema'
-import * as archiver from 'archiver'
-import * as https from 'node:https'
-import * as http from 'node:http'
 import { Response } from 'express'
 
 @Injectable()
@@ -98,52 +94,21 @@ export class MatchAlbumService {
 
         const matchedIds: string[] = JSON.parse(matchResult) as string[]
 
-        if (!matchedIds.length)
+        if (!matchedIds.length) {
             throw new NotFoundException('No matched photos to download')
-
-        const allPhotos = await this.photoService.getPhotos(album.id)
-        const filteredPhotos = allPhotos.filter((p) =>
-            matchedIds.includes(p.id),
-        )
-        const photoDtos = filteredPhotos.map((p) =>
-            this.photoService.serialize(p),
-        )
+        }
 
         res.set({
             'Content-Type': 'application/zip',
             'Content-Disposition': `attachment; filename="spottmee-matched-${matchId}.zip"`,
         })
 
-        const zip = archiver('zip', { zlib: { level: 9 } })
+        const zip = await this.photoService.createPhotoZip(albumId, matchedIds)
         zip.pipe(res as unknown as NodeJS.WritableStream)
 
-        const addPhotoToZip = (photo: PhotoDto): Promise<void> =>
-            new Promise((resolve, reject) => {
-                const client = photo.url.startsWith('https') ? https : http
-                client
-                    .get(photo.url, (stream) => {
-                        zip.append(stream, {
-                            name: filteredPhotos[
-                                filteredPhotos.findIndex(
-                                    (p) => p.id === photo.id,
-                                )
-                            ].normalized_name,
-                        })
-                        stream.on('end', resolve)
-                        stream.on('error', reject)
-                    })
-                    .on('error', reject)
-            })
-
-        try {
-            for (const photo of photoDtos) {
-                await addPhotoToZip(photo)
-            }
-            await zip.finalize()
-        } catch (err) {
-            throw new InternalServerErrorException(
-                err instanceof Error ? err.message : 'Error creating zip',
-            )
-        }
+        // handle zip errors
+        zip.on('error', (err) => {
+            throw new InternalServerErrorException(err.message)
+        })
     }
 }
