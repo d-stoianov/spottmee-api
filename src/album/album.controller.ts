@@ -57,7 +57,9 @@ export class AlbumController {
             authContext.user.id,
         )
 
-        return albums.map((al) => this.albumService.serializeToAlbumDto(al))
+        return Promise.all(
+            albums.map((al) => this.albumService.serializeToAlbumDto(al)),
+        )
     }
 
     @Get(':id')

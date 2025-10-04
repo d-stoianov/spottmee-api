@@ -144,10 +144,14 @@ export class AlbumService {
         })
     }
 
-    public serializeToAlbumDto(album: Album): AlbumDto {
+    public async serializeToAlbumDto(album: Album): Promise<AlbumDto> {
         const coverImageUrl = album.cover_image_name
             ? `${this.firebase.getPublicBucketLink()}/albums/${album.id}/${album.cover_image_name}`
             : undefined
+
+        const allPhotos = await this.photoService.getPhotos(album.id)
+
+        const albumSize = allPhotos.reduce((prev, curr) => prev + curr.size, 0)
 
         return albumSchema.parse({
             id: album.id,
@@ -155,6 +159,8 @@ export class AlbumService {
             createdAt: album.createdAt,
             description: album.description ?? undefined,
             coverImageUrl: coverImageUrl,
+            totalPhotosCount: allPhotos.length,
+            size: albumSize,
         })
     }
 

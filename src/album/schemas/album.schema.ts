@@ -9,6 +9,14 @@ export const albumSchema = z.object({
         .url()
         .describe('Hosted URL of the cover image for the album')
         .optional(),
+    totalPhotosCount: z
+        .number()
+        .describe('Total Photos for the album')
+        .optional(),
+    size: z
+        .number()
+        .describe('Total size of photos in the album (bytes)')
+        .optional(),
 })
 
 export type AlbumDto = z.infer<typeof albumSchema>
