@@ -10,7 +10,11 @@ async function bootstrap() {
         new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
     )
 
-    app.enableCors(process.env.origin ?? '*')
+    app.enableCors({
+        origin: ['https://app.spottmee.com', 'http://localhost:5173'],
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        credentials: true,
+    })
     app.useGlobalFilters(new ZodValidationExceptionFilter())
 
     await app.listen(process.env.PORT ?? 3000)
