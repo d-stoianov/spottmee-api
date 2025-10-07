@@ -16,7 +16,11 @@ Service integrates with the [Spottmee Face Embeddings Worker](https://github.com
 -   **Firebase**
 -   **Zod**
 
-## Prerequisites
+---
+
+## Getting Started
+
+### Prerequisites
 
 Make sure you have the following installed:
 
@@ -26,7 +30,7 @@ Make sure you have the following installed:
 - Redis
 - Firebase project
 
-## Installation
+### Installation
 
 1.  Clone the repository:
 
@@ -52,13 +56,13 @@ Make sure you have the following installed:
     FIREBASE_SERVICE_ACCOUNT_B64=
     ```
     
-5.  Start the development server:
+4. Start the development server:
 
     ```bash
     pnpm start:dev
     ```
 
-## ESLint
+### ESLint
 
 The project uses ESLint and Prettier for code quality and consistency. You can run the linter with:
 
@@ -66,7 +70,7 @@ The project uses ESLint and Prettier for code quality and consistency. You can r
 pnpm run lint
 ```
 
-## Building project
+### Building project
 
 For deploying the project, first we have to build it and then run compiled JavaScript. You can use the following commands:
 
@@ -75,7 +79,7 @@ pnpm run build
 pnpm start:prod
 ```
 
-## Running with Docker
+### Running with Docker
 
 If you don’t want to install Node.js, pnpm, or dependencies locally, you can use Docker instead.
 The repository includes a ready-to-use Dockerfile.
