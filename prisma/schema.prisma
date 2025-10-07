@@ -24,7 +24,8 @@ model Album {
   name             String
   description      String?
   cover_image_name String?
-  createdAt        DateTime @default(now())
+  created_at       DateTime @default(now())
+  matches_count    Int      @default(0)
   creator          User     @relation(fields: [creator_id], references: [id])
   photos           Photo[]
 }

@@ -13,6 +13,7 @@ export const albumSchema = z.object({
         .number()
         .describe('Total Photos for the album')
         .optional(),
+    matchesCount: z.number('Number of match runs made on the album'),
     size: z
         .number()
         .describe('Total size of photos in the album (bytes)')

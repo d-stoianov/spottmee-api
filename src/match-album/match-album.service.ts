@@ -34,6 +34,7 @@ export class MatchAlbumService {
             selfieBuffer.toString('base64'),
         )
         await this.redisService.set(`match-result:${matchId}`, 'INITIATED')
+        await this.albumService.incrementMatchCount(album.id)
 
         return matchId
     }

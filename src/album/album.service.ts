@@ -86,6 +86,15 @@ export class AlbumService {
         })
     }
 
+    async incrementMatchCount(albumId: string): Promise<Album> {
+        return this.prisma.album.update({
+            where: { id: albumId },
+            data: {
+                matches_count: { increment: 1 },
+            },
+        })
+    }
+
     async updateAlbumById(
         userId: string,
         id: string,
@@ -156,10 +165,11 @@ export class AlbumService {
         return albumSchema.parse({
             id: album.id,
             name: album.name,
-            createdAt: album.createdAt,
+            createdAt: album.created_at,
             description: album.description ?? undefined,
             coverImageUrl: coverImageUrl,
             totalPhotosCount: allPhotos.length,
+            matchesCount: album.matches_count,
             size: albumSize,
         })
     }
@@ -190,7 +200,7 @@ export class AlbumService {
             previewPhotos: previewPhotos.map((photo) =>
                 this.photoService.getPhotoUrl(photo),
             ),
-            createdAt: album.createdAt,
+            createdAt: album.created_at,
             description: album.description ?? undefined,
             coverImageUrl: coverImageUrl,
         })
