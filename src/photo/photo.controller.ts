@@ -24,6 +24,7 @@ import { PhotoDto } from '@/photo/schemas/photo.schema'
 import { QueueService } from '@/queue/queue.service'
 import { PhotosResponseDto } from '@/photo/schemas/photos-response.schema'
 import { Response } from 'express'
+import { NsfwService } from '@/nsfw/nsfw.service'
 
 @UseGuards(AuthGuard, AlbumAccessGuard)
 @Controller('albums/:id/photos')
@@ -31,6 +32,7 @@ export class PhotoController {
     constructor(
         private readonly photoService: PhotoService,
         private readonly queueService: QueueService,
+        private readonly nsfwService: NsfwService,
     ) {}
 
     @Post()
@@ -41,6 +43,17 @@ export class PhotoController {
     ): Promise<PhotosResponseDto> {
         if (!files || files.length === 0) {
             throw new BadRequestException('No photos were uploaded')
+        }
+
+        // check for NSFW photos
+        const results = await Promise.all(
+            files.map((f) => this.nsfwService.isSafeImage(f.buffer)),
+        )
+
+        if (results.some((r) => !r)) {
+            throw new BadRequestException(
+                'Some of the photos are inappropriate or NSFW',
+            )
         }
 
         const photos = await this.photoService.uploadPhotos(albumId, files)

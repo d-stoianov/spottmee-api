@@ -11,6 +11,7 @@ import {
     HttpStatus,
     UseInterceptors,
     UploadedFiles,
+    BadRequestException,
 } from '@nestjs/common'
 
 import { AlbumService } from '@/album/album.service'
@@ -21,11 +22,15 @@ import { createAlbumSchema } from '@/album/schemas/create-album.schema'
 import { updateAlbumSchema } from '@/album/schemas/update-album.schema'
 import { AlbumDto } from '@/album/schemas/album.schema'
 import { FilesInterceptor } from '@nestjs/platform-express'
+import { NsfwService } from '@/nsfw/nsfw.service'
 
 @UseGuards(AuthGuard)
 @Controller('albums')
 export class AlbumController {
-    constructor(private readonly albumService: AlbumService) {}
+    constructor(
+        private readonly albumService: AlbumService,
+        private readonly nsfwService: NsfwService,
+    ) {}
 
     @Post()
     @UseInterceptors(FilesInterceptor('coverImage', 1))
@@ -35,6 +40,15 @@ export class AlbumController {
         @UploadedFiles() files: Express.Multer.File[],
     ): Promise<AlbumDto> {
         const coverImage = files?.[0]
+
+        // check for NSFW
+        const isSafe = await this.nsfwService.isSafeImage(coverImage.buffer)
+
+        if (!isSafe) {
+            throw new BadRequestException(
+                'Cover photo is inappropriate or NSFW',
+            )
+        }
 
         const dto = createAlbumSchema.parse({
             ...body,
@@ -84,6 +98,15 @@ export class AlbumController {
         @UploadedFiles() files: Express.Multer.File[],
     ): Promise<AlbumDto> {
         const coverImage = files?.[0]
+
+        // check for NSFW
+        const isSafe = await this.nsfwService.isSafeImage(coverImage.buffer)
+
+        if (!isSafe) {
+            throw new BadRequestException(
+                'Cover photo is inappropriate or NSFW',
+            )
+        }
 
         const dto = updateAlbumSchema.parse({
             ...body,

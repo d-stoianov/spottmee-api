@@ -9,6 +9,7 @@ import { AlbumModule } from '@/album/album.module'
 import { PhotoModule } from '@/photo/photo.module'
 import { MatchAlbumModule } from '@/match-album/match-album.module'
 import { QueueModule } from '@/queue/queue.module'
+import { NsfwModule } from '@/nsfw/nsfw.module'
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { QueueModule } from '@/queue/queue.module'
         PrismaModule,
         FirebaseModule,
         QueueModule,
+        NsfwModule,
         AuthModule,
         UserModule,
         AlbumModule,
