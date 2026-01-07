@@ -42,7 +42,9 @@ export class AlbumController {
         const coverImage = files?.[0]
 
         // check for NSFW
-        const isSafe = await this.nsfwService.isSafeImage(coverImage.buffer)
+        const isSafe = coverImage
+            ? await this.nsfwService.isSafeImage(coverImage.buffer)
+            : true
 
         if (!isSafe) {
             throw new BadRequestException(
@@ -100,7 +102,9 @@ export class AlbumController {
         const coverImage = files?.[0]
 
         // check for NSFW
-        const isSafe = await this.nsfwService.isSafeImage(coverImage.buffer)
+        const isSafe = coverImage
+            ? await this.nsfwService.isSafeImage(coverImage.buffer)
+            : true
 
         if (!isSafe) {
             throw new BadRequestException(
