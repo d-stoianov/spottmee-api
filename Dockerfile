@@ -15,7 +15,7 @@ RUN npm rebuild @tensorflow/tfjs-node --build-from-source
 
 FROM base AS build
 COPY . .
-RUN pnpx prisma generate
+RUN npm run prisma:generate
 RUN npm run build
 
 RUN npm rebuild @tensorflow/tfjs-node --build-from-source
